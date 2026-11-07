@@ -331,15 +331,18 @@ export function HubChat({
   const rawBusy = s.running || starting;
   const [busy, setBusy] = useState(rawBusy);
   useEffect(() => {
-    if (rawBusy) { setBusy(true); return; }
-    const t = window.setTimeout(() => setBusy(false), 700);
-    return () => window.clearTimeout(t);
+    setBusy(rawBusy);
   }, [rawBusy]);
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    if (!busy) { setTick(0); return; }
+    const t = window.setInterval(() => setTick((n) => n + 1), 1800);
+    return () => window.clearInterval(t);
+  }, [busy]);
   const lastActivity = useRef<{ bot: AgentInfo; state: "thinking" | "tool" | "talking" } | null>(null);
   // Who is busy right now and what they are doing (thinking / using a tool / writing).
   const activity = useMemo(() => {
     if (!busy) return [] as { bot: AgentInfo; state: "thinking" | "tool" | "talking" }[];
-    if (!s.running && !starting && lastActivity.current) return [lastActivity.current];
     if (!s.running && !starting) return [] as { bot: AgentInfo; state: "thinking" | "tool" | "talking" }[];
     const live = s.running && lastAgent && s.turns[s.turns.length - 1] === lastAgent ? lastAgent : undefined;
     const st: "thinking" | "tool" | "talking" = orb === "tool" ? "tool" : orb === "talking" ? "talking" : "thinking";
@@ -454,12 +457,11 @@ export function HubChat({
                       </div>
                       <span className="cx-time">{time}</span>
                     </div>
-                  ) : (
+                  ) : !b.text && !(b.lastPart && b.turn.cards?.length) ? null : (
                     <div className="cx-row cx-row-agent">
                       <div className="cx-avatar"><BotAvatar agent={b.speaker || agent} size={22} state="idle" /></div>
                       <div className="cx-agent-body">
                         {(group || b.partIndex === 0) && <span className="cx-author" dir="auto">{b.speaker?.name || title}</span>}
-                        {b.partIndex === 0 && b.turn.steps?.some((step: any) => step.kind !== "thought") && <StepTimeline steps={b.turn.steps.filter((step: any) => step.kind !== "thought")} lang={lang} />}
                         {b.lastPart && b.turn.cards?.filter((c: any) => c.kind === "plan").map((c: any) => <PlanCard key={c.id} title={c.title} steps={c.steps} lang={lang} />)}
                         {b.text && (
                           <div className="cx-bubble cx-bubble-agent" data-hit={hit} data-select={selectable === b.key} dir="auto" {...handlers}>
@@ -504,7 +506,12 @@ export function HubChat({
                 : <ChoiceCard key={r.id} question={r.question} options={r.options?.length ? r.options.map((o) => o.label) : r.kind === "approval" ? [ar ? "موافق" : "Approve", ar ? "لأ" : "Don't"] : []} allowFreeText={r.allow_free_text || r.kind === "question"} ar={ar} onAnswer={(v) => { s.setRequests((rs) => rs.filter((x) => x.id !== r.id)); s.send(v); }} />
             ))}
             {activity.slice(0, 1).map(({ bot, state }) => {
-              const label = state === "tool" ? (ar ? "شغال على الطلب" : "Working on it") : state === "talking" ? (ar ? "بيكتب" : "Writing") : (ar ? "بيفكر في الموضوع" : "Thinking it through");
+              const pool = state === "tool"
+                ? (ar ? ["شغال على الطلب", "بجهّز الأدوات", "بنفّذ الخطوة", "قربت أخلص"] : ["Working on it", "Getting things ready", "Running the step", "Almost there"])
+                : state === "talking"
+                ? (ar ? ["بيكتب", "بيرتب الرد", "بيكمل الكتابة"] : ["Writing", "Shaping the reply", "Still writing"])
+                : (ar ? ["بيفكر في الموضوع", "بيحلل طلبك", "بيرتب أفكاره", "لحظة كمان"] : ["Thinking it through", "Reading your request", "Organizing ideas", "One more moment"]);
+              const label = pool[tick % pool.length];
               return (
                 <div className="cx-working" key="working">
                   <BotAvatar agent={bot} size={30} state={state} />
