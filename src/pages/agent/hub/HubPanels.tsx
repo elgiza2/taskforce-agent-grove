@@ -391,7 +391,7 @@ export function SearchOverlay({
       </div>
       <div className="hub-search-results">
         {(filter === "All" || filter === "Bots") && matchingAgents.map((agent) => (
-          <button type="button" className="hub-search-row" key={agent.id} onClick={() => onBot(agent.id)}><BotAvatar agent={agent} size={40} /><span><strong>{agent.name}</strong><small>{agent.description}</small></span><em>{ar ? "بوت" : "Bot"}</em></button>
+          <button type="button" className="hub-search-row" key={agent.id} onClick={() => onBot(agent.id)}><BotAvatar agent={agent} size={40} /><span><strong>{agent.name}</strong><small>{agent.description}</small></span></button>
         ))}
         {(filter === "All" || filter === "Group Chats") && matchingGroups.map((group) => (
           <button type="button" className="hub-search-row" key={group.id} onClick={() => onGroup(group.id)}><GroupAvatar group={group} agents={agents} size={34} /><span><strong>{group.name}</strong><small>{group.category}</small></span><em>{ar ? "جروب" : "Group Chat"}</em></button>

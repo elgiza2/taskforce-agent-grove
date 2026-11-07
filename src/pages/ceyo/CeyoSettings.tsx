@@ -390,11 +390,17 @@ function Vault_({ nav }: { nav: Nav }) {
         </div>}
       </div>}
     >
-      <div className="hub-search-filters ceyo-tabs">
-        <button type="button" data-active={tab === "all"} onClick={() => setTab("all")}>All <span>{items.length}</span></button>
-        <button type="button" data-active={tab === "login"} onClick={() => setTab("login")}>Logins <span>{count("login")}</span></button>
-        <button type="button" data-active={tab === "card"} onClick={() => setTab("card")}>Payments <span>{count("card")}</span></button>
-        <button type="button" data-active={tab === "contact"} onClick={() => setTab("contact")}>Contact info <span>{count("contact")}</span></button>
+      <div className="ceyo-vault-hero">
+        <span className="ceyo-vault-hero-icon"><Vault size={26} /></span>
+        <div><strong>{items.length} saved {items.length === 1 ? "item" : "items"}</strong><small>Private to this device and account</small></div>
+      </div>
+      <div className="ceyo-vault-tiles">
+        {([["login", "Logins", <KeyRound size={20} />], ["card", "Payments", <CreditCard size={20} />], ["contact", "Contacts", <User size={20} />]] as const).map(([kind, name, icon]) => (
+          <button type="button" key={kind} data-active={tab === kind} onClick={() => setTab(tab === kind ? "all" : kind)}>
+            <span className="ceyo-vault-tile-icon">{icon}</span><strong>{name}</strong><small>{count(kind)}</small>
+            <i role="button" aria-label={`Add ${name}`} onClick={(event) => { event.stopPropagation(); openAdd(kind); }}><Plus size={14} /></i>
+          </button>
+        ))}
       </div>
       {adding && <form className="ceyo-card ceyo-vault-form" onSubmit={(event) => {
         event.preventDefault();
