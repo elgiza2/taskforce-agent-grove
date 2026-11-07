@@ -41,6 +41,10 @@ import { groupTranscript, type AgentGroup } from "./hubStorage";
 import { BotAvatar, HubSpinner, type HubLang } from "./HubParts";
 import { readReactions, writeReactions, REACTIONS } from "./chatPrefs";
 import { IntegrationApprovalCard } from "@/components/agent/IntegrationApprovalCard";
+import { readTextAttachment } from "@/lib/ceyo/content";
+import { saveDocument } from "@/lib/ceyo/resources";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 type Bubble = {
   key: string;
@@ -99,6 +103,7 @@ function Composer({
   const [text, setText] = useState("");
   const [plusOpen, setPlusOpen] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
+  const [uploading, setUploading] = useState(false);
   const fileIn = useRef<HTMLInputElement>(null);
   const camIn = useRef<HTMLInputElement>(null);
   const mediaIn = useRef<HTMLInputElement>(null);
@@ -117,14 +122,22 @@ function Composer({
   useEffect(() => { if (replyTo) textarea.current?.focus(); }, [replyTo]);
   useEffect(() => () => recognition.current?.stop(), []);
 
-  const submit = () => {
+  const submit = async () => {
     const typed = text.trim();
-    if (!typed && !files.length) return;
-    const value = files.length ? `${typed}${typed ? "\n\n" : ""}${files.map((f) => `📎 ${f.name}`).join("\n")}` : typed;
-    onSend(replyTo ? `> ${replyTo.slice(0, 200).replace(/\n/g, " ")}\n\n${value}` : value);
-    setText("");
-    setFiles([]);
-    onCancelReply();
+    if (uploading || (!typed && !files.length)) return;
+    setUploading(true);
+    try {
+      const documents = await Promise.all(files.map(readTextAttachment));
+      const refs: string[] = [];
+      for (const doc of documents) {
+        const saved = await saveDocument(doc);
+        refs.push(`Attached document: ${doc.name}; read_file id=${saved.id}. Read its actual contents before answering.`);
+      }
+      const value = [typed, ...refs].filter(Boolean).join("\n\n");
+      onSend(replyTo ? `> ${replyTo.slice(0, 200).replace(/\n/g, " ")}\n\n${value}` : value);
+      setText(""); setFiles([]); onCancelReply();
+    } catch (error) { toast.error(error instanceof Error ? error.message : "Could not send files"); }
+    finally { setUploading(false); }
   };
 
   const listen = () => {
@@ -185,7 +198,7 @@ function Composer({
           }}
         />
         {text.trim() || files.length ? (
-          <button type="button" className="cx-circle cx-send" aria-label="Send" onClick={submit}><ArrowUp size={18} /></button>
+          <Button variant="ghost" size="icon" type="button" className="cx-circle cx-send" aria-label="Send" disabled={uploading} onClick={() => void submit()}><ArrowUp size={18} /></Button>
         ) : (
           <>
             <button type="button" className="cx-circle cx-mic" data-active={listening} aria-label="Voice" onClick={listen}><Mic size={18} /></button>

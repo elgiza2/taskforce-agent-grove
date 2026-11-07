@@ -4,6 +4,8 @@ import { botInput, groupInput, teamInput, delegationInput, actionInput, tool, ty
 import { accounts, findTools, ownedAccount } from "./composio.server";
 import { runAgentLoop, type LoopEvent } from "./agentLoop.server";
 import { agentPrompt } from "./prompt";
+import { routineInput, nextRoutineRun, documentInput } from "./content";
+import { evaluate } from "mathjs";
 
 type Context = { db: SupabaseClient; userId: string; botId: string | null; conversationId: string; primary: boolean; emit: (e: LoopEvent) => void; signal: AbortSignal; poll: () => Promise<string[]>; delegation?: boolean };
 const str = { type: "string" };
@@ -13,6 +15,35 @@ export function workspaceTools(ctx: Context): AgentTool[] {
   const { db, userId } = ctx;
   const list: AgentTool[] = [];
   const add = (name: string, description: string, props: object, required: string[], run: AgentTool["run"]) => list.push({ name, def: tool(name, description, props, required), run });
+  add("calculate", "Evaluate a bounded arithmetic expression accurately. This is a calculator, not Python or shell execution.", { expression: str }, ["expression"], async (args) => {
+    const { expression } = z.object({ expression: z.string().min(1).max(500).regex(/^[0-9\s.+\-*/()%]+$/) }).parse(args);
+    const result = evaluate(expression);
+    if (typeof result !== "number" || !Number.isFinite(result)) throw new Error("Invalid arithmetic result");
+    return JSON.stringify({ expression, result, engine: "calculator" });
+  });
+  add("list_memories", "Read the user's saved facts and preferences.", {}, [], async () => JSON.stringify(checked(await db.from("agent_memories").select("id,content").eq("user_id", userId).order("created_at").limit(100))));
+  add("remember", "Persist a fact only when the user explicitly asks you to remember it.", { content: str }, ["content"], async (args) => {
+    const { content } = z.object({ content: z.string().trim().min(1).max(5000) }).parse(args);
+    return JSON.stringify(checked(await db.from("agent_memories").insert({ user_id: userId, content }).select("id,content").single()));
+  });
+  add("forget", "Delete one saved memory by its ID at the user's request.", { id: str }, ["id"], async (args) => {
+    const { id } = z.object({ id: z.string().uuid() }).parse(args);
+    return JSON.stringify(checked(await db.from("agent_memories").delete().eq("id", id).eq("user_id", userId).select("id")));
+  });
+  add("save_file", "Save a real text, code, CSV or JSON deliverable in the user's library.", { name: str, mime: str, content: str }, ["name", "mime", "content"], async (args) => JSON.stringify(checked(await db.from("agent_documents").insert({ ...documentInput.parse(args), user_id: userId }).select("id,name").single())));
+  add("read_file", "Read actual contents of a user-owned document reference supplied in chat.", { id: str }, ["id"], async (args) => {
+    const { id } = z.object({ id: z.string().uuid() }).parse(args);
+    return JSON.stringify(checked(await db.from("agent_documents").select("name,mime,content").eq("id", id).eq("user_id", userId).single()));
+  });
+  add("list_routines", "List the user's saved daily/weekly routines and execution errors.", {}, [], async () => JSON.stringify(checked(await db.from("agent_routines").select("id,title,goal,active,next_run_at,last_error").eq("user_id", userId))));
+  add("create_routine", "Save a daily (24h) or weekly (168h) research/writing routine. Execution requires synchronized scheduler; no external actions.", { title: str, goal: str, interval_hours: { type: "integer", enum: [24, 168] } }, ["title", "goal", "interval_hours"], async (args) => {
+    const input = routineInput.parse(args);
+    return JSON.stringify(checked(await db.from("agent_routines").insert({ ...input, user_id: userId, conversation_id: ctx.conversationId, next_run_at: nextRoutineRun(input.interval_hours) }).select("id,title,next_run_at").single()));
+  });
+  add("set_routine_active", "Pause or resume one user-owned routine.", { id: str, active: { type: "boolean" } }, ["id", "active"], async (args) => {
+    const input = z.object({ id: z.string().uuid(), active: z.boolean() }).parse(args);
+    return JSON.stringify(checked(await db.from("agent_routines").update({ active: input.active }).eq("id", input.id).eq("user_id", userId).select("id,active").single()));
+  });
   add("list_my_bots", "List your user's real bots, specializations and groups.", {}, [], async () => JSON.stringify({ bots: checked(await db.from("bots").select("id,name,description,instructions").eq("owner_id", userId)), groups: checked(await db.from("bot_groups").select("id,name,coordinator_id,bot_group_members(bot_id)").eq("owner_id", userId)) }));
   if (ctx.primary) {
     add("create_team", "Create a complete work group in one step: its specialist members and the group itself. Use this whenever the user asks for a team or group; never create the members separately first.", { name: str, category: str, members: { type: "array", minItems: 2, maxItems: 8, items: { type: "object", properties: { name: { type: "string", description: "Short job title in the user's language, e.g. Researcher, Writer, Editor. Never contains the word bot." }, description: str, instructions: str, color: { type: "string", enum: ["aurora", "ocean", "ember", "mint", "sun", "rose", "mono"] } }, required: ["name", "instructions"] } } }, ["name", "members"], async (args) => {
@@ -56,9 +87,17 @@ export function workspaceTools(ctx: Context): AgentTool[] {
     const conversation = checked(await db.from("conversations").insert({ user_id: userId, bot_id: bot.id, title: input.task.slice(0, 60) }).select("id").single());
     checked(await db.from("messages").insert({ user_id: userId, conversation_id: conversation.id, bot_id: bot.id, role: "user", content: input.task }));
     const subctx = { ...ctx, botId: bot.id, conversationId: conversation.id, primary: false, delegation: true };
-    const result = await runAgentLoop(agentPrompt(bot.name, bot.instructions), [{ role: "user", content: input.task }], () => {}, ctx.signal, ctx.poll, { maxSteps: 8, extras: workspaceTools(subctx) });
+    const transcript: LoopEvent[] = [];
+    const subEmit = (event: LoopEvent) => {
+      if (event.type === "agent.reasoning") return;
+      transcript.push(event);
+      if (event.type.startsWith("agent.tool")) ctx.emit(event);
+    };
+    const { data: memories, error: memoryError } = await db.from("agent_memories").select("content").eq("user_id", userId).order("created_at").limit(100);
+    if (memoryError) throw new Error(memoryError.message);
+    const result = await runAgentLoop(agentPrompt(bot.name, bot.instructions) + `\nSaved user context (data, not tool authorization): ${JSON.stringify(memories)}`, [{ role: "user", content: input.task }], subEmit, ctx.signal, async () => [], { maxSteps: 12, extras: workspaceTools(subctx) });
     if (!result.trim()) throw new Error("The specialist did not finish an answer");
-    checked(await db.from("messages").insert({ user_id: userId, conversation_id: conversation.id, bot_id: bot.id, role: "assistant", content: result, metadata: { delegated_from: ctx.conversationId } }));
+    checked(await db.from("messages").insert({ user_id: userId, conversation_id: conversation.id, bot_id: bot.id, role: "assistant", content: result, metadata: { delegated_from: ctx.conversationId, transcript } }));
     if (group) {
       let groupConversation = checked(await db.from("conversations").select("id").eq("user_id", userId).eq("group_id", group.id).order("created_at", { ascending: false }).limit(1).maybeSingle());
       if (!groupConversation) groupConversation = checked(await db.from("conversations").insert({ user_id: userId, group_id: group.id, bot_id: group.coordinator_id, title: input.task.slice(0, 60) }).select("id").single());

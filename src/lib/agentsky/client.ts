@@ -137,11 +137,12 @@ async function checkBackgroundJobs() {
     const { data } = await supabase.auth.getSession();
     const token = data.session?.access_token;
     if (!token) return;
-    const { data: rows } = await db.from("messages").select("id").eq("role", "assistant").eq("metadata->>done", "false").limit(10);
+    const { data: rows } = await db.from("agent_jobs").select("id").in("status", ["queued", "running"]).limit(10);
     for (const r of rows ?? []) {
-      const res = await fetch("/api/ceyo-task", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ messageId: r.id }) });
+      const res = await fetch("/api/ceyo-task", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ jobId: r.id }) });
+      if (!res.ok) continue;
       const j = await res.json().catch(() => ({}));
-      if (j?.posted && j.conversationId) changeSubs.forEach((f) => f(j.conversationId));
+      if (j?.done && j.conversationId) changeSubs.forEach((f) => f(j.conversationId));
     }
   } catch { /* try again next tick */ } finally { polling = false; }
 }
@@ -181,6 +182,13 @@ export const agentApi = {
     const { data, error } = await db.from("bots").update(agentInput(a)).eq("id", id).select("*").single();
     if (error) fail(error);
     return { agent: toAgent(data, null) };
+  },
+  makePrimary: async (id: string) => {
+    const user = await uid();
+    const { data: bot, error: botError } = await db.from("bots").select("id").eq("id", id).eq("owner_id", user).single();
+    if (botError || !bot) fail(botError);
+    const { error } = await db.from("profiles").update({ primary_bot_id: id }).eq("id", user);
+    if (error) fail(error);
   },
   deleteAgent: async (id: string) => {
     const { error } = await db.from("bots").delete().eq("id", id);

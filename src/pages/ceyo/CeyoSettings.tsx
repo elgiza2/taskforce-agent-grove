@@ -16,6 +16,7 @@ import {
   integrationSlug, type IntegrationAccount,
 } from "@/lib/integrationBackend";
 import { Button } from "@/components/ui/button";
+import { validateVaultDetail } from "@/lib/ceyo/content";
 import { IntegrationLogo } from "@/components/chat/integrations/IntegrationRow";
 import {
   DEFAULT_PERMISSIONS, PERMISSIONS_STORAGE_KEY, addPermissionRule, parsePermissionPreferences,
@@ -308,8 +309,14 @@ function Vault_({ nav }: { nav: Nav }) {
   const [title, setTitle] = useState("");
   const [detail, setDetail] = useState("");
   const menuRef = useRef<HTMLDivElement>(null);
+  const [vaultKey, setVaultKey] = useState<string | null>(null);
   useEffect(() => {
-    try { setItems(JSON.parse(localStorage.getItem(VAULT_KEY) || "[]")); } catch { setItems([]); }
+    void supabase.auth.getUser().then(({ data }) => {
+      if (!data.user) return;
+      const key = `${VAULT_KEY}:${data.user.id}`;
+      setVaultKey(key);
+      try { setItems(JSON.parse(localStorage.getItem(key) || "[]")); } catch { setItems([]); }
+    });
   }, []);
   useEffect(() => {
     if (!menu) return;
@@ -319,7 +326,7 @@ function Vault_({ nav }: { nav: Nav }) {
     document.addEventListener("pointerdown", close);
     return () => document.removeEventListener("pointerdown", close);
   }, [menu]);
-  const save = (next: VaultItem[]) => { setItems(next); localStorage.setItem(VAULT_KEY, JSON.stringify(next)); };
+  const save = (next: VaultItem[]) => { if (!vaultKey) return; setItems(next); localStorage.setItem(vaultKey, JSON.stringify(next)); };
   const shown = items.filter((item) => (tab === "all" || item.kind === tab) && `${item.title} ${item.detail}`.toLowerCase().includes(query.toLowerCase()));
   const labels = { login: "Login", card: "Card", contact: "Contact info" } as const;
   const count = (kind: VaultItem["kind"]) => items.filter((item) => item.kind === kind).length;
@@ -346,13 +353,14 @@ function Vault_({ nav }: { nav: Nav }) {
       {adding && <form className="ceyo-card ceyo-vault-form" onSubmit={(event) => {
         event.preventDefault();
         if (!title.trim()) return;
+        try { validateVaultDetail(adding, detail); } catch (error) { toast.error(error instanceof Error ? error.message : "Invalid details"); return; }
         save([{ id: crypto.randomUUID(), kind: adding, title: title.trim(), detail: detail.trim() }, ...items]);
         setAdding(null);
         toast.success("Saved to your vault");
       }}>
         <strong>New {labels[adding].toLowerCase()}</strong>
         <input className="ceyo-input" aria-label="Title" maxLength={100} placeholder={adding === "login" ? "Website" : adding === "card" ? "Card name" : "Name"} value={title} onChange={(event) => setTitle(event.target.value)} autoFocus />
-        <input className="ceyo-input" aria-label="Details" maxLength={160} placeholder={adding === "login" ? "Username or email" : adding === "card" ? "Last 4 digits" : "Phone or address"} value={detail} onChange={(event) => setDetail(event.target.value)} />
+        <input className="ceyo-input" aria-label="Details" maxLength={adding === "card" ? 4 : 160} inputMode={adding === "card" ? "numeric" : "text"} pattern={adding === "card" ? "[0-9]{4}" : undefined} placeholder={adding === "login" ? "Username or email" : adding === "card" ? "Last 4 digits" : "Phone or address"} value={detail} onChange={(event) => setDetail(event.target.value)} />
         <div className="hub-form-footer"><button type="submit" className="hub-button hub-button-primary">Save</button><button type="button" className="hub-button hub-button-secondary" onClick={() => setAdding(null)}>Cancel</button></div>
       </form>}
       {shown.length > 0 && <div className="ceyo-vault-list">{shown.map((item) => <div className="ceyo-vault-row" key={item.id}>
@@ -459,10 +467,10 @@ function Computer({ nav }: { nav: Nav }) {
   const [confirming, setConfirming] = useState(false);
   return (
     <Shell title="Bot Computer" back={() => nav("/settings")}>
-      <Group><Row label="Reset Computer" sub="Rebuild from your last saved snapshot. Very recent changes may be lost." danger onClick={() => setConfirming(true)} right={<span />} /></Group>
-      <p className="ceyo-note">The one computer your Bots share.</p>
+      <Group><Row label="Reset Computer" sub="No computer service connected" disabled right={<span />} /></Group>
+      <p className="ceyo-note">Computer execution is unavailable. Web research and saved text files remain available.</p>
       {confirming && <div className="ceyo-card ceyo-confirm-card"><strong>Reset this computer?</strong><p>This requires a connected bot computer. Recent changes may be lost.</p><div className="hub-form-footer"><button type="button" className="hub-button hub-button-primary" onClick={() => { setConfirming(false); toast.error("No connected bot computer is available to reset"); }}>Reset</button><button type="button" className="hub-button hub-button-secondary" onClick={() => setConfirming(false)}>Cancel</button></div></div>}
-      <Group><Row label="Disk space" value="Normal" right={<span />} /></Group>
+      <Group><Row label="Connection" value="Not connected" right={<span />} /></Group>
     </Shell>
   );
 }
@@ -500,6 +508,13 @@ const MEMORY_PROMPT = `Export all of my stored memories and any context you've l
 function Memory({ nav }: { nav: Nav }) {
   const [text, setText] = useState("");
   const [saving, setSaving] = useState(false);
+  const [memories, setMemories] = useState<{ id: string; content: string }[]>([]);
+  const [error, setError] = useState("");
+  const refresh = async () => {
+    const { data, error } = await supabase.from("agent_memories").select("id,content").order("created_at", { ascending: false });
+    setError(error?.message || ""); setMemories(data || []);
+  };
+  useEffect(() => { void refresh(); }, []);
   const copyPrompt = async () => {
     try { await navigator.clipboard.writeText(MEMORY_PROMPT); toast.success("Prompt copied"); } catch { toast.error("Could not copy the prompt"); }
   };
@@ -509,17 +524,20 @@ function Memory({ nav }: { nav: Nav }) {
     try {
       const { data } = await supabase.auth.getUser();
       if (!data.user) throw new Error("Sign in first");
-      const { error } = await supabase.from("user_knowledge").insert({ user_id: data.user.id, name: "Imported memory", use_when: "Always", content: text.trim().slice(0, 5000) } as never);
+      const { error } = await supabase.from("agent_memories").insert({ user_id: data.user.id, content: text.trim().slice(0, 5000) });
       if (error) throw error;
       setText("");
       toast.success("Memory added");
+      await refresh();
     } catch (error) { toast.error(error instanceof Error ? error.message : "Could not add memory"); } finally { setSaving(false); }
   };
   return (
     <Shell title="Import Memory" back={() => nav("/settings")}>
       <section className="ceyo-memory-step"><h2>1. Copy this prompt into a chat with your other SI assistant</h2><div className="ceyo-memory-prompt"><p>{MEMORY_PROMPT}</p><button type="button" onClick={() => void copyPrompt()}><Copy size={16} />Copy prompt</button></div></section>
       <section className="ceyo-memory-step"><h2>2. Paste the results below to add them to Ceyo Bot's memory</h2><textarea className="ceyo-input ceyo-textarea" maxLength={5000} placeholder="Paste your memory details here" value={text} onChange={(event) => setText(event.target.value)} /></section>
-      <button type="button" className="hub-button hub-button-primary ceyo-wide ceyo-memory-add" disabled={!text.trim() || saving} onClick={() => void add()}>{saving ? "Adding…" : "Add to Memory"}</button>
+      <Button type="button" className="hub-button hub-button-primary ceyo-wide ceyo-memory-add" disabled={!text.trim() || saving} onClick={() => void add()}>{saving ? "Adding…" : "Add to Memory"}</Button>
+      {error && <p role="alert" className="text-destructive p-4">{error}</p>}
+      <section className="px-4 py-4"><h2>Saved memories</h2>{memories.map((memory) => <div key={memory.id} className="flex gap-2 border-b border-border py-3"><p className="min-w-0 flex-1 whitespace-pre-wrap break-words">{memory.content}</p><Button variant="ghost" size="icon-sm" aria-label="Delete memory" onClick={async () => { const { error } = await supabase.from("agent_memories").delete().eq("id", memory.id); if (error) toast.error(error.message); else await refresh(); }}><Trash2 /></Button></div>)}</section>
     </Shell>
   );
 }

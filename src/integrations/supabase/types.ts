@@ -61,6 +61,36 @@ export type Database = {
           },
         ]
       }
+      agent_documents: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          mime: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          mime: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          mime?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       agent_jobs: {
         Row: {
           bot_id: string | null
@@ -117,6 +147,130 @@ export type Database = {
           },
           {
             foreignKeyName: "agent_jobs_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_memories: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      agent_routine_runs: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: string
+          result: string | null
+          routine_id: string
+          scheduled_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          result?: string | null
+          routine_id: string
+          scheduled_at: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          result?: string | null
+          routine_id?: string
+          scheduled_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_routine_runs_routine_id_fkey"
+            columns: ["routine_id"]
+            isOneToOne: false
+            referencedRelation: "agent_routines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_routines: {
+        Row: {
+          active: boolean
+          conversation_id: string
+          created_at: string
+          goal: string
+          id: string
+          interval_hours: number
+          last_error: string | null
+          last_result: string | null
+          lease_until: string | null
+          next_run_at: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          conversation_id: string
+          created_at?: string
+          goal: string
+          id?: string
+          interval_hours: number
+          last_error?: string | null
+          last_result?: string | null
+          lease_until?: string | null
+          next_run_at: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          conversation_id?: string
+          created_at?: string
+          goal?: string
+          id?: string
+          interval_hours?: number
+          last_error?: string | null
+          last_result?: string | null
+          lease_until?: string | null
+          next_run_at?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_routines_conversation_id_fkey"
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "conversations"
@@ -439,6 +593,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_agent_routines: {
+        Args: never
+        Returns: {
+          active: boolean
+          conversation_id: string
+          created_at: string
+          goal: string
+          id: string
+          interval_hours: number
+          last_error: string | null
+          last_result: string | null
+          lease_until: string | null
+          next_run_at: string
+          title: string
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "agent_routines"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
