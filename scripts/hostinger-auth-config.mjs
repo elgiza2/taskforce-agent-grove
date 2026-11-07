@@ -17,7 +17,7 @@ export function buildHostingerAuthConfig(env) {
   }
   return {
     smtp_host: env.HOSTINGER_SMTP_HOST,
-    smtp_port: Number(env.HOSTINGER_SMTP_PORT),
+    smtp_port: env.HOSTINGER_SMTP_PORT,
     smtp_user: env.HOSTINGER_SMTP_USER,
     smtp_pass: env.HOSTINGER_SMTP_PASSWORD,
     smtp_admin_email: env.HOSTINGER_SMTP_FROM,
