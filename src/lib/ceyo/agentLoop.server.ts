@@ -160,7 +160,10 @@ export async function runAgentLoop(
     const real = calls.filter(Boolean);
     const steer = await poll();
     if (!real.length) {
-      if (!steer.length) return answer;
+      if (!steer.length) {
+        if (!text.trim()) throw new Error("The agent did not complete an answer. No success was recorded.");
+        return answer;
+      }
       if (text) messages.push({ role: "assistant", content: text });
       for (const t of steer) messages.push({ role: "user", content: t });
       continue;
@@ -189,9 +192,9 @@ export async function runAgentLoop(
       try { const extra = extras.find((extra) => extra.name === c.name); result = extra ? await extra.run(args) : await runTool(c.name, args); } catch (e) { result = e instanceof Error ? e.message : "Tool failed"; status = "error"; }
       emit({ id: `${c.id}-res`, type: "agent.tool_result", part: { type: "tool_result", call_id: c.id, tool_name: c.name, status, result: result.slice(0, 30000) } });
       messages.push({ role: "tool", tool_call_id: c.id, content: result });
-      if (c.name === "ask_user" || c.name === "connect_app" || c.name === "request_integration_action") return answer;
+      if (status === "ok" && (c.name === "ask_user" || c.name === "connect_app" || c.name === "request_integration_action")) return answer;
     }
     if (redirected) continue;
   }
-  return answer;
+  throw new Error("The task reached its step limit before completing. Saved tool results remain available; ask to continue.");
 }

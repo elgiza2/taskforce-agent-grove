@@ -1,5 +1,16 @@
 # Roadmap
 
+## Complete audited gaps — current request
+- [ ] Repair persistent memory and verify recall through signed-in chat.
+- [ ] Send actual text/document contents and connect the saved-files library.
+- [ ] Make agent completion, delegation transcripts and job polling reliable.
+- [ ] Connect daily/weekly routine creation, management and signed scheduled execution.
+- [ ] Make Vault account-scoped and enforce last-four-only card labels.
+- [ ] Connect actual computer/code execution; blocked until an isolated execution service is available.
+- [ ] Activate Google Play purchases; blocked on signed Android app, Play products and verification credentials.
+- [ ] Verify external account actions; blocked on account-owner OAuth approval.
+- [ ] Verify marketing and inbox delivery; blocked on recipient consent/campaign content and inbox confirmation.
+
 ## Full live audit — 2026-11-07
 - [x] Sign in to the supplied test account; exercise chat, team creation, simple delegation, complex research and computer requests through the live UI.
 - [x] Review settings, memory, integrations and remaining app features; all 38 existing tests passed.
