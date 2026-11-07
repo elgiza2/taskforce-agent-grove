@@ -43,7 +43,7 @@ export async function configureHostingerAuth(env, request = fetch) {
   const verification = await request(url, { headers, signal: AbortSignal.timeout(30_000) });
   if (!verification.ok) throw new Error("Email configuration read-back failed; activation is unverified.");
   const current = await verification.json();
-  const matches = current.smtp_host === config.smtp_host && Number(current.smtp_port) === config.smtp_port
+  const matches = current.smtp_host === config.smtp_host && String(current.smtp_port) === String(config.smtp_port)
     && current.smtp_user === config.smtp_user && current.smtp_admin_email === config.smtp_admin_email
     && current.smtp_sender_name === config.smtp_sender_name;
   if (!matches) throw new Error("Email configuration read-back did not match; activation is unverified.");
