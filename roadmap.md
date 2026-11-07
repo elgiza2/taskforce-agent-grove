@@ -1,5 +1,10 @@
 # Roadmap
 
+## Full live audit — 2026-11-07
+- [ ] Sign in to the supplied test account and exercise chat, complex research, bot/group management and computer requests through the live UI.
+- [ ] Review settings, memory, integrations and remaining app features; run existing automated tests.
+- [ ] Record live evidence, repair reproducible failures where feasible, and report incomplete features and external blockers honestly.
+
 ## Google Play and owned-domain email
 - [ ] Configure Android billing for package `si.ceyo.app`; real activation requires Play product IDs, authorized purchase verification, and a signed Android application.
 - [x] Store Hostinger SMTP settings as secrets and add an operator-only script to configure native Supabase Auth with read-back verification.
