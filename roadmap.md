@@ -130,3 +130,4 @@
 - [x] Stop endless reply retries when a reply fails.
 - [x] Verified signed-in: team request creates group + role-named members; group delegation with live web research replies.
 - [x] Audit computer/code, imported memory and app connection: computer/code disconnected, memory endpoint returned 404, Gmail card rendered; details in the live audit report.
+- [x] Floating chat composer (messages scroll beneath it)

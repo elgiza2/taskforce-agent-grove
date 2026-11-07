@@ -738,3 +738,21 @@ html[data-ceyo-surface="bot"] .agent-hub.ceyo-page{--ceyo-page-bg:#1b1b20;--ceyo
 .ceyo-fb-foot { padding: 14px 16px calc(18px + env(safe-area-inset-bottom)); }
 .ceyo-fb-send { width: 100%; border: 0; border-radius: 999px; background: #2c2c2e; color: #fff; font-size: 16px; font-weight: 600; padding: 15px; }
 .ceyo-fb-send:disabled { opacity: .45; }
+
+.ceyo-vault-hero{display:flex;align-items:center;gap:14px;margin:4px 0 14px;padding:18px;border-radius:22px;background:linear-gradient(135deg,var(--ceyo-card),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.06)}
+.ceyo-vault-hero-icon{display:grid;place-items:center;width:52px;height:52px;border-radius:16px;background:rgba(255,255,255,.08)}
+.ceyo-vault-hero strong{display:block;font-size:17px;font-weight:600}
+.ceyo-vault-hero small{display:block;margin-top:3px;color:var(--ceyo-secondary);font-size:12.5px}
+.ceyo-vault-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.ceyo-vault-tiles>button{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:14px 12px;border-radius:18px;border:1px solid rgba(255,255,255,.06);background:var(--ceyo-card);color:inherit;text-align:start}
+.ceyo-vault-tiles>button[data-active="true"]{border-color:rgba(255,255,255,.5)}
+.ceyo-vault-tile-icon{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;background:rgba(255,255,255,.07)}
+.ceyo-vault-tiles strong{font-size:13.5px;font-weight:500}
+.ceyo-vault-tiles small{color:var(--ceyo-secondary);font-size:12px}
+.ceyo-vault-tiles i{position:absolute;top:10px;inset-inline-end:10px;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.1);font-style:normal}
+/* Floating composer: messages scroll beneath it */
+.cx-chat{position:relative}
+.cx-chat .cx-composer-wrap{position:absolute;left:0;right:0;bottom:0;background:transparent;pointer-events:none}
+.cx-chat .cx-composer-wrap>*{pointer-events:auto}
+.cx-chat .cx-composer{background:rgba(35,35,37,.72);-webkit-backdrop-filter:blur(18px) saturate(1.4);backdrop-filter:blur(18px) saturate(1.4);box-shadow:0 8px 28px rgba(0,0,0,.35)}
+.cx-chat .cx-scroll{padding-bottom:calc(96px + env(safe-area-inset-bottom))}
