@@ -16,7 +16,7 @@ describe("Ceyo Hostinger Auth configuration", () => {
   it("uses Hostinger TLS port 465", () => {
     const config = buildHostingerAuthConfig(settings);
     expect(config.smtp_host).toBe("smtp.hostinger.com");
-    expect(config.smtp_port).toBe(465);
+    expect(config.smtp_port).toBe("465");
     expect(() => buildHostingerAuthConfig({ ...settings, HOSTINGER_SMTP_PORT: "25" })).toThrow();
   });
   it("uses only the support@ceyo.si mailbox as sender and login", () => {
