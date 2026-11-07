@@ -260,7 +260,16 @@ export function HubChat({
   const orb = orbStateFor(lastAgent, s.running);
 
   useEffect(() => { setMenuOpen(false); setFindOpen(false); setFindQuery(""); setSheet(null); setReplyTo(null); }, [agent.id, sessionId]);
-  useEffect(() => { const el = scroller.current; if (el && pinned) el.scrollTop = el.scrollHeight; }, [s.turns, s.queue, pinned]);
+  const pinnedRef = useRef(pinned);
+  pinnedRef.current = pinned;
+  useLayoutEffect(() => { const el = scroller.current; if (el && pinned) el.scrollTop = el.scrollHeight; }, [s.turns, s.queue, pinned]);
+  useEffect(() => {
+    const el = scroller.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => { if (pinnedRef.current) el.scrollTop = el.scrollHeight; });
+    Array.from(el.children).forEach((c) => ro.observe(c));
+    return () => ro.disconnect();
+  });
   useEffect(() => { if (!demo && !s.running) void refreshSessions(); }, [s.running, demo]);
   useEffect(() => {
     if (demo || !sessionId || s.running) return;
