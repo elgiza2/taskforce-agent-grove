@@ -13,5 +13,7 @@ export function validateVaultDetail(kind: string, detail: string) {
 export async function readTextAttachment(file: File) {
   if (file.size > 100000) throw new Error(`${file.name}: maximum text file size is 100 KB`);
   if (!/\.(txt|md|csv|json|js|ts|tsx|jsx|py|html|css|xml|yaml|yml|log|sql)$/i.test(file.name)) throw new Error(`${file.name}: use a text, code, CSV or JSON file; image, video and PDF analysis is not connected`);
-  return documentInput.parse({ name: file.name, mime: file.type || "text/plain", content: await file.text() });
+  const parsed = documentInput.parse({ name: file.name, mime: file.type || "text/plain", content: await file.text() });
+  if (!parsed.name || !parsed.mime || !parsed.content) throw new Error("Empty document");
+  return { name: parsed.name, mime: parsed.mime, content: parsed.content };
 }
