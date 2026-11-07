@@ -291,7 +291,7 @@ export function HubChat({
   }, [demo, sessionId, s.running]);
   useEffect(() => {
     const err = lastAgent?.error || s.error;
-    if (err) setToast({ title: ar ? "البوت مقدرش يرد" : "Bot failed to respond", body: err, tone: "error" });
+    if (err) setToast({ title: ar ? "الوكيل مقدرش يرد" : "No reply received", body: err, tone: "error" });
   }, [lastAgent?.error, s.error, ar]);
 
   const startConversation = async (text: string) => {
@@ -397,7 +397,7 @@ export function HubChat({
     setSheet(null);
   };
 
-  const placeholder = ar ? `رسالة لـ ${title}` : `Message ${title}`;
+  const placeholder = group ? (ar ? "اسأل فريقك…" : "Ask your team…") : ar ? `رسالة لـ ${title}` : `Message ${title}`;
   const empty = bubbles.length === 0;
 
   return (
