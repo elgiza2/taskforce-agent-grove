@@ -81,7 +81,8 @@ async function startReply(sessionId: string) {
   running.get(sessionId)?.ctl.abort();
   const live: Live = { ctl: new AbortController(), events: [], subs: new Set() };
   running.set(sessionId, live);
-  const push = (e: RawEvent) => { live.events.push(e); live.subs.forEach((f) => f(e)); };
+  let failed = false;
+  const push = (e: RawEvent) => { if (e.type === "session.error") failed = true; live.events.push(e); live.subs.forEach((f) => f(e)); };
   void (async () => {
     try {
       const res = await fetch("/api/ceyo-chat", {
@@ -99,7 +100,7 @@ async function startReply(sessionId: string) {
       if (running.get(sessionId) === live) running.delete(sessionId);
     }
     // A message sent in the last moment of a run may have missed it: answer it now.
-    if (!live.ctl.signal.aborted && !running.has(sessionId)) {
+    if (!failed && !live.ctl.signal.aborted && !running.has(sessionId)) {
       const { data: last } = await db.from("messages").select("role").eq("conversation_id", sessionId).order("created_at", { ascending: false }).limit(1).maybeSingle();
       if (last?.role === "user") void startReply(sessionId);
     }
