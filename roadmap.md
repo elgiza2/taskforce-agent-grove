@@ -132,5 +132,5 @@
 - [x] Audit computer/code, imported memory and app connection: computer/code disconnected, memory endpoint returned 404, Gmail card rendered; details in the live audit report.
 - [x] Floating chat composer (messages scroll beneath it)
 
-- [ ] Fix lag + reply restarting from the beginning (group chat stream)
-- [ ] Home header: transparent, no borders, floating buttons
+- [x] Fix lag + reply restarting from the beginning (group chat stream)
+- [x] Home header: transparent, no borders, floating buttons
