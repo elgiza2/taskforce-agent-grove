@@ -1,5 +1,10 @@
 # Roadmap
 
+## Full live audit — 2026-11-07
+- [x] Sign in to the supplied test account; exercise chat, team creation, simple delegation, complex research and computer requests through the live UI.
+- [x] Review settings, memory, integrations and remaining app features; all 38 existing tests passed.
+- [x] Record evidence and incomplete features in `docs/live-audit-2026-11-07.md`; this audit did not repair application code.
+
 ## Google Play and owned-domain email
 - [ ] Configure Android billing for package `si.ceyo.app`; real activation requires Play product IDs, authorized purchase verification, and a signed Android application.
 - [x] Store Hostinger SMTP settings as secrets and add an operator-only script to configure native Supabase Auth with read-back verification.
@@ -15,7 +20,8 @@
 - [x] Connect Composio account management and integration approval cards inside chat with multiple accounts per app.
 - [x] Secure Inngest serving and durable idempotent result delivery; unsigned requests rejected.
 - [ ] Inngest synchronization: app.ceyo.si does not resolve, confirmed by Inngest's sync response; publish/connect the domain first. Inline work remains available.
-- [ ] Authenticated end-to-end bot creation/delegation and Composio OAuth checks: external unmanaged Supabase provides no test session.
+- [x] Authenticated bot/group creation and simple delegation checked using the supplied test account; Gmail authorization card rendered.
+- [ ] Complete integration OAuth and real execution: account-owner authorization is required; not performed during the audit.
 - [ ] Arbitrary code execution/full bot computer: only Browserbase web reading is configured; a code-execution service is not connected.
 - [x] Run targeted message, tool-input and steering tests.
 
@@ -111,4 +117,4 @@
 - [x] Single robot loader with rotating text, hides instantly; no "Used tool" lines or empty reply rows; chat stays pinned while replies grow.
 - [x] Stop endless reply retries when a reply fails.
 - [x] Verified signed-in: team request creates group + role-named members; group delegation with live web research replies.
-- [ ] Computer/code agent, memory, and app-connection sign-ins not yet tested end-to-end.
+- [x] Audit computer/code, imported memory and app connection: computer/code disconnected, memory endpoint returned 404, Gmail card rendered; details in the live audit report.
