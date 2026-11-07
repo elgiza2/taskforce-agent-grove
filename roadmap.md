@@ -2,7 +2,9 @@
 
 ## Google Play and owned-domain email
 - [ ] Configure Android billing for package `si.ceyo.app`; real activation requires Play product IDs, authorized purchase verification, and a signed Android application.
-- [ ] Configure self-hosted email on `ceyo.si` for verification and marketing, not Lovable Emails; blocked on the server address, available mail setup, and authorized access.
+- [x] Store Hostinger SMTP settings as secrets and add an operator-only script to configure native Supabase Auth with read-back verification.
+- [ ] Activate Hostinger verification email; blocked on a Supabase management access token, then real inbox-delivery/code verification.
+- [ ] Marketing mail via owned Hostinger mailbox remains separate from Auth and subject to provider limits; campaign sending is not configured.
 
 ## Ceyo executable agents
 - [x] Make the chat composer smaller and hide its inner scrollbar.
