@@ -9,7 +9,7 @@ const settings = {
   HOSTINGER_SMTP_PASSWORD: "test-only-not-a-credential",
   HOSTINGER_SMTP_FROM: "support@ceyo.si",
   HOSTINGER_SMTP_SENDER_NAME: "Ceyo",
-  SUPABASE_ACCESS_TOKEN: "test-only-not-a-credential",
+  CEYO_SUPABASE_MANAGEMENT_TOKEN: "test-only-not-a-credential",
 };
 
 describe("Ceyo Hostinger Auth configuration", () => {
@@ -32,7 +32,7 @@ describe("Ceyo Hostinger Auth configuration", () => {
   });
   it("requires management authorization without contacting the provider", async () => {
     const request = vi.fn();
-    await expect(configureHostingerAuth({ ...settings, SUPABASE_ACCESS_TOKEN: "" }, request)).rejects.toThrow("authorization");
+    await expect(configureHostingerAuth({ ...settings, CEYO_SUPABASE_MANAGEMENT_TOKEN: "" }, request)).rejects.toThrow("authorization");
     expect(request).not.toHaveBeenCalled();
   });
   it("applies settings to the connected project and verifies their read-back", async () => {

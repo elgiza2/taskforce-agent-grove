@@ -10,7 +10,7 @@ The secret store holds `HOSTINGER_SMTP_HOST`, `HOSTINGER_SMTP_PORT`,
 `HOSTINGER_SMTP_SENDER_NAME`. The mailbox is support@ceyo.si, using
 smtp.hostinger.com with TLS on port 465.
 
-To activate the hosted Auth configuration, provide `SUPABASE_ACCESS_TOKEN`
+To activate the hosted Auth configuration, provide `CEYO_SUPABASE_MANAGEMENT_TOKEN`
 securely from https://supabase.com/dashboard/account/tokens using an account
 authorized to manage project `kcrssdgsefhpzoidlhhm`. This is a management token,
 not an anonymous or service-role API key.

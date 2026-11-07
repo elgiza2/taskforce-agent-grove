@@ -26,13 +26,13 @@ export function buildHostingerAuthConfig(env) {
 }
 
 export async function configureHostingerAuth(env, request = fetch) {
-  if (!env.SUPABASE_ACCESS_TOKEN) {
+  if (!env.CEYO_SUPABASE_MANAGEMENT_TOKEN) {
     throw new Error("Supabase management authorization is required before activating email.");
   }
   const config = buildHostingerAuthConfig(env);
   const url = `https://api.supabase.com/v1/projects/${projectRef}/config/auth`;
   const headers = {
-    Authorization: `Bearer ${env.SUPABASE_ACCESS_TOKEN}`,
+    Authorization: `Bearer ${env.CEYO_SUPABASE_MANAGEMENT_TOKEN}`,
     "Content-Type": "application/json",
   };
   const response = await request(url, {
