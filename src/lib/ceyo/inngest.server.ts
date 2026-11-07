@@ -7,7 +7,7 @@ export function createInngest() {
   return new Inngest({ id: "ceyo", signingKey, eventKey: process.env.INNGEST_EVENT_KEY, isDev: false });
 }
 export function createLongTask(client: Inngest) {
-  return client.createFunction({ id: "ceyo-long-task", retries: 1, triggers: [{ event: "ceyo/long.task" }] }, async ({ event, step }) => {
+  return client.createFunction({ id: "ceyo-long-task", retries: 0, concurrency: { limit: 1, key: "event.data.jobId" }, triggers: [{ event: "ceyo/long.task" }] }, async ({ event, step }) => {
     const jobId = String(event.data.jobId || "");
     if (!/^[a-f0-9-]{36}$/i.test(jobId)) throw new Error("Invalid job");
     // This function is reached only through the SDK's signed handler.
@@ -17,7 +17,7 @@ export function createLongTask(client: Inngest) {
       if (error || !data) throw new Error("Job not found");
       return data;
     });
-    if (job.status === "cancelled" || job.status === "completed") return { text: job.result || "" };
+    if (job.status === "cancelled" || job.status === "completed" || job.status === "failed") return { text: job.result || "" };
     const text = await step.run("work", async () => {
       await supabaseAdmin.from("agent_jobs").update({ status: "running" }).eq("id", job.id);
       let cursor = job.cursor_at;

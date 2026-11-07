@@ -28,6 +28,7 @@ import { Route as ApiRenderPdfRouteImport } from './routes/api/render-pdf'
 import { Route as ApiTranscribeRouteImport } from './routes/api/transcribe'
 import { Route as ApiWebSearchRouteImport } from './routes/api/web-search'
 import { Route as ApiAgentSplatRouteImport } from './routes/api/agent.$'
+import { Route as ApiPublicCeyoRoutinesRouteImport } from './routes/api/public/ceyo-routines'
 import { Route as ApiPublicFxRouteImport } from './routes/api/public/fx'
 import { Route as ApiPublicGeoRouteImport } from './routes/api/public/geo'
 import { Route as ApiPublicInngestRouteImport } from './routes/api/public/inngest'
@@ -132,6 +133,11 @@ const ApiAgentSplatRoute = ApiAgentSplatRouteImport.update({
   path: '/api/agent/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicCeyoRoutinesRoute = ApiPublicCeyoRoutinesRouteImport.update({
+  id: '/api/public/ceyo-routines',
+  path: '/api/public/ceyo-routines',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicFxRoute = ApiPublicFxRouteImport.update({
   id: '/api/public/fx',
   path: '/api/public/fx',
@@ -196,6 +202,7 @@ export interface FileRoutesByFullPath {
   '/api/transcribe': typeof ApiTranscribeRoute
   '/api/web-search': typeof ApiWebSearchRoute
   '/api/agent/$': typeof ApiAgentSplatRoute
+  '/api/public/ceyo-routines': typeof ApiPublicCeyoRoutinesRoute
   '/api/public/fx': typeof ApiPublicFxRoute
   '/api/public/geo': typeof ApiPublicGeoRoute
   '/api/public/inngest': typeof ApiPublicInngestRoute
@@ -225,6 +232,7 @@ export interface FileRoutesByTo {
   '/api/transcribe': typeof ApiTranscribeRoute
   '/api/web-search': typeof ApiWebSearchRoute
   '/api/agent/$': typeof ApiAgentSplatRoute
+  '/api/public/ceyo-routines': typeof ApiPublicCeyoRoutinesRoute
   '/api/public/fx': typeof ApiPublicFxRoute
   '/api/public/geo': typeof ApiPublicGeoRoute
   '/api/public/inngest': typeof ApiPublicInngestRoute
@@ -255,6 +263,7 @@ export interface FileRoutesById {
   '/api/transcribe': typeof ApiTranscribeRoute
   '/api/web-search': typeof ApiWebSearchRoute
   '/api/agent/$': typeof ApiAgentSplatRoute
+  '/api/public/ceyo-routines': typeof ApiPublicCeyoRoutinesRoute
   '/api/public/fx': typeof ApiPublicFxRoute
   '/api/public/geo': typeof ApiPublicGeoRoute
   '/api/public/inngest': typeof ApiPublicInngestRoute
@@ -286,6 +295,7 @@ export interface FileRouteTypes {
     | '/api/transcribe'
     | '/api/web-search'
     | '/api/agent/$'
+    | '/api/public/ceyo-routines'
     | '/api/public/fx'
     | '/api/public/geo'
     | '/api/public/inngest'
@@ -315,6 +325,7 @@ export interface FileRouteTypes {
     | '/api/transcribe'
     | '/api/web-search'
     | '/api/agent/$'
+    | '/api/public/ceyo-routines'
     | '/api/public/fx'
     | '/api/public/geo'
     | '/api/public/inngest'
@@ -344,6 +355,7 @@ export interface FileRouteTypes {
     | '/api/transcribe'
     | '/api/web-search'
     | '/api/agent/$'
+    | '/api/public/ceyo-routines'
     | '/api/public/fx'
     | '/api/public/geo'
     | '/api/public/inngest'
@@ -374,6 +386,7 @@ export interface RootRouteChildren {
   ApiTranscribeRoute: typeof ApiTranscribeRoute
   ApiWebSearchRoute: typeof ApiWebSearchRoute
   ApiAgentSplatRoute: typeof ApiAgentSplatRoute
+  ApiPublicCeyoRoutinesRoute: typeof ApiPublicCeyoRoutinesRoute
   ApiPublicFxRoute: typeof ApiPublicFxRoute
   ApiPublicGeoRoute: typeof ApiPublicGeoRoute
   ApiPublicInngestRoute: typeof ApiPublicInngestRoute
@@ -519,6 +532,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAgentSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/ceyo-routines': {
+      id: '/api/public/ceyo-routines'
+      path: '/api/public/ceyo-routines'
+      fullPath: '/api/public/ceyo-routines'
+      preLoaderRoute: typeof ApiPublicCeyoRoutinesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/fx': {
       id: '/api/public/fx'
       path: '/api/public/fx'
@@ -598,6 +618,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiTranscribeRoute: ApiTranscribeRoute,
   ApiWebSearchRoute: ApiWebSearchRoute,
   ApiAgentSplatRoute: ApiAgentSplatRoute,
+  ApiPublicCeyoRoutinesRoute: ApiPublicCeyoRoutinesRoute,
   ApiPublicFxRoute: ApiPublicFxRoute,
   ApiPublicGeoRoute: ApiPublicGeoRoute,
   ApiPublicInngestRoute: ApiPublicInngestRoute,
