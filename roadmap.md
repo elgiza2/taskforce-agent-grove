@@ -1,5 +1,9 @@
 # Roadmap
 
+## Google Play and owned-domain email
+- [ ] Configure Android billing for package `si.ceyo.app`; real activation requires Play product IDs, authorized purchase verification, and a signed Android application.
+- [ ] Configure Lovable email on `ceyo.si` for verification and marketing; domain setup and sending eligibility must be confirmed first.
+
 ## Ceyo executable agents
 - [x] Make the chat composer smaller and hide its inner scrollbar.
 - [x] Update the Composio project key through the secure form; account and tool listing API checks returned 200.
