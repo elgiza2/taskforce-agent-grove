@@ -217,7 +217,7 @@ export function CreateHint({ lang, onClick }: { lang: HubLang; onClick: () => vo
     <button type="button" className="hub-create-hint" onClick={onClick}>
       <span className="hub-create-hint-icon"><Plus size={18} /></span>
       <span>
-        <strong>{lang === "ar" ? "عايز بوت جديد؟" : "Need another bot?"}</strong>
+        <strong>{lang === "ar" ? "عايز وكيل جديد؟" : "Need another agent?"}</strong>
         <small>{lang === "ar" ? "اطلبه من Ceyo أو اعمله بنفسك" : "Ask Ceyo or create it yourself"}</small>
       </span>
       <Bot size={17} />

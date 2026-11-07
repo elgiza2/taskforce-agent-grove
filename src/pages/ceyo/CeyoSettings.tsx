@@ -164,14 +164,15 @@ function Main({ nav }: { nav: Nav }) {
         <MeCard onClick={() => nav("/settings/account")} />
         <Row label="Usage" value={loading ? "…" : `${usage.used}%`} onClick={() => nav("/settings/usage")} />
         <Row label="Manage Subscription" onClick={() => nav("/settings/subscription")} />
+        <Row label="Storage" sub="Files, memories and cache" onClick={() => nav("/settings/storage")} />
         <Row label="Vault" sub="Logins, cards and contact info Ceyo can use" onClick={() => nav("/settings/vault")} />
       </Group>
       <Group><Row label="Connect apps" sub="Search plugins" onClick={() => nav("/settings/apps")} /></Group>
-      <Group title="Bot">
+      <Group title="Agent">
         <Row label="Permissions" sub={permissionSummary(permissions)} onClick={() => nav("/settings/permissions")} />
-        <Row label="Set Time Zone Automatically" sub="Your Bot's computer follows this device's time zone." checked={autoTz} onClick={() => flip("ceyo_auto_tz", !autoTz, setAutoTz)} right={<Toggle on={autoTz} />} />
+        <Row label="Set Time Zone Automatically" sub="Your agent's computer follows this device's time zone." checked={autoTz} onClick={() => flip("ceyo_auto_tz", !autoTz, setAutoTz)} right={<Toggle on={autoTz} />} />
         <Row label="Time Zone" value={tz} right={<span />} />
-        <Row label="Bot Computer" onClick={() => nav("/settings/computer")} />
+        <Row label="Agent Computer" onClick={() => nav("/settings/computer")} />
         <Row label="Manage your devices" onClick={() => nav("/settings/devices")} />
         <Row label="Import Memory" onClick={() => nav("/settings/memory")} />
       </Group>
@@ -223,25 +224,70 @@ function Account({ nav }: { nav: Nav }) {
 
 function Usage({ nav }: { nav: Nav }) {
   const { credits, plan, loading } = useCredits() as { credits: number | null; plan: string; loading: boolean };
-  const [showPlan, setShowPlan] = useState(false);
+  const [alerts, setAlerts] = useState(false);
+  useEffect(() => { setAlerts(localStorage.getItem("ceyo_usage_alerts") === "on"); }, []);
   const usage = usageFor(credits, plan);
+  const toggleAlerts = () => { const next = !alerts; setAlerts(next); localStorage.setItem("ceyo_usage_alerts", next ? "on" : "off"); toast.success(next ? "We'll warn you at 80% usage" : "Usage alerts off"); };
   return (
     <Shell title="Usage" back={() => nav("/settings")}>
       <div className="ceyo-usage-panel">
         <div className="ceyo-usage-body">
           <div className="ceyo-usage-head"><strong>Weekly usage limit</strong><span>Resets weekly</span></div>
           <div className="ceyo-bar" aria-label={loading ? "Loading usage" : `${usage.used}% used`}><i style={{ width: `${loading ? 0 : usage.used}%` }} /></div>
-          <span className="ceyo-usage-percent">{loading ? "…" : `${usage.used}%`}</span>
+          <span className="ceyo-usage-percent">{loading ? "…" : `${usage.used}% used`}</span>
         </div>
-        <button type="button" className="ceyo-usage-manage" onClick={() => setShowPlan((value) => !value)} aria-expanded={showPlan}>
-          Manage usage <ChevronRight size={17} />
-        </button>
       </div>
-      {showPlan && <Group title="Subscription">
-        <Row label="Current plan" value={plan.charAt(0).toUpperCase() + plan.slice(1)} />
-        <Row label="Credits remaining" value={loading ? "…" : usage.left.toLocaleString()} />
-        <Row label="Weekly credit limit" value={usage.cap.toLocaleString()} />
-      </Group>}
+      <Group title="Plan">
+        <Row label="Current plan" value={plan.charAt(0).toUpperCase() + plan.slice(1)} right={<span />} />
+        <Row label="Credits remaining" value={loading ? "…" : usage.left.toLocaleString()} right={<span />} />
+        <Row label="Weekly credit limit" value={usage.cap.toLocaleString()} right={<span />} />
+      </Group>
+      <Group>
+        <Row label="Upgrade plan" sub="Get more usage every week" onClick={() => nav("/settings/plans")} />
+        <Row label="Manage subscription" onClick={() => nav("/settings/subscription")} />
+        <Row label="Usage alerts" sub="Notify me when I reach 80%" checked={alerts} onClick={toggleAlerts} right={<Toggle on={alerts} />} />
+      </Group>
+    </Shell>
+  );
+}
+
+function fmtBytes(n: number) { return n < 1024 ? `${n} B` : n < 1048576 ? `${(n / 1024).toFixed(1)} KB` : `${(n / 1048576).toFixed(1)} MB`; }
+
+function Storage({ nav }: { nav: Nav }) {
+  const [docs, setDocs] = useState<{ id: string; name: string; size: number }[] | null>(null);
+  const [memCount, setMemCount] = useState<number | null>(null);
+  const [cache, setCache] = useState(0);
+  const measureCache = () => { let t = 0; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i) || ""; t += k.length + (localStorage.getItem(k)?.length || 0); } setCache(t * 2); };
+  const load = async () => {
+    const { data } = await supabase.from("agent_documents").select("id,name,content").order("created_at", { ascending: false });
+    setDocs((data || []).map((d: { id: string; name: string; content?: string }) => ({ id: d.id, name: d.name, size: new Blob([d.content || ""]).size })));
+    const { count } = await supabase.from("agent_memories").select("id", { count: "exact", head: true });
+    setMemCount(count ?? 0);
+  };
+  useEffect(() => { void load(); measureCache(); }, []);
+  const total = (docs || []).reduce((a, d) => a + d.size, 0);
+  const clearCache = () => {
+    const keep = /auth-token|ceyo_vault|ceyo_permissions|ceyo_language|ceyo_theme|theme/;
+    Object.keys(localStorage).filter((k) => !keep.test(k)).forEach((k) => localStorage.removeItem(k));
+    measureCache(); toast.success("Cache cleared");
+  };
+  const remove = async (id: string) => {
+    if (!(await askConfirm({ title: "Delete this file?", body: "Your agents will no longer be able to read it.", confirm: "Delete" }))) return;
+    const { error } = await supabase.from("agent_documents").delete().eq("id", id);
+    if (error) toast.error(error.message); else { toast.success("File deleted"); void load(); }
+  };
+  return (
+    <Shell title="Storage" back={() => nav("/settings")}>
+      <Group title="Overview">
+        <Row label="Files" value={docs ? `${docs.length} · ${fmtBytes(total)}` : "…"} right={<span />} />
+        <Row label="Memories" value={memCount === null ? "…" : String(memCount)} onClick={() => nav("/settings/memory")} />
+        <Row label="Device cache" value={fmtBytes(cache)} right={<span />} />
+      </Group>
+      <Group><Row label="Clear device cache" sub="Keeps your sign-in and saved settings" onClick={clearCache} /></Group>
+      <Group title="Files">
+        {docs && !docs.length && <Row label="No files yet" sub="Files you send in chat appear here" right={<span />} />}
+        {docs?.map((d) => <Row key={d.id} label={d.name} value={fmtBytes(d.size)} onClick={() => void remove(d.id)} right={<Trash2 size={16} />} />)}
+      </Group>
     </Shell>
   );
 }
@@ -375,9 +421,12 @@ function Vault_({ nav }: { nav: Nav }) {
   );
 }
 
+let appsCache: { connected: Record<string, boolean>; accounts: IntegrationAccount[] } | null = null;
 function Apps({ nav, appId }: { nav: Nav; appId?: string }) {
-  const [connected, setConnected] = useState<Record<string, boolean>>({});
-  const [accounts, setAccounts] = useState<IntegrationAccount[]>([]);
+  const [connected, setConnectedState] = useState<Record<string, boolean>>(appsCache?.connected || {});
+  const [accounts, setAccountsState] = useState<IntegrationAccount[]>(appsCache?.accounts || []);
+  const setConnected = (v: Record<string, boolean>) => { appsCache = { connected: v, accounts: appsCache?.accounts || [] }; setConnectedState(v); };
+  const setAccounts = (v: IntegrationAccount[]) => { appsCache = { connected: appsCache?.connected || {}, accounts: v }; setAccountsState(v); };
   const [error, setError] = useState("");
   const [cat, setCat] = useState("All");
   const [busy, setBusy] = useState("");
@@ -663,6 +712,7 @@ export default function CeyoSettings() {
   switch (section) {
     case "account": return <Account nav={nav} />;
     case "usage": return <Usage nav={nav} />;
+    case "storage": return <Storage nav={nav} />;
     case "plans": return <Plans nav={nav} />;
     case "subscription": return <Subscription nav={nav} />;
     case "feedback": return <Feedback nav={nav} />;

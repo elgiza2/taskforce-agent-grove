@@ -95,8 +95,8 @@ export function AgentForm({
     const n = name.trim();
     onSubmit({
       name: n,
-      description: initial?.description || `${n} — personal Ceyo bot`,
-      prompt: initial?.prompt || `You are ${n}, a personal bot inside Ceyo. Be helpful, clear and concise. Reply in the user's language.`,
+      description: initial?.description || `${n} — Ceyo agent`,
+      prompt: initial?.prompt || `You are ${n}, a Ceyo agent. Be helpful, clear and concise. Reply in the user's language.`,
       color: agentColorFor(hex),
       category,
       voice: v,
@@ -105,10 +105,10 @@ export function AgentForm({
   };
   return (
     <section className="gx-create">
-      <header className="gx-create-head"><button type="button" className="gx-round" aria-label="Close" onClick={onCancel}><X size={22} /></button><h1>{title || (initial ? "Edit Bot" : "Create New Bot")}</h1></header>
+      <header className="gx-create-head"><button type="button" className="gx-round" aria-label="Close" onClick={onCancel}><X size={22} /></button><h1>{title || (initial ? "Edit agent" : "Create new agent")}</h1></header>
       <div className="gx-create-body">
-        <div className="gx-create-preview"><BotAvatar agent={{ name: name || "Bot", color: agentColorFor(hex), isDefault: false }} look={look} size={96} /></div>
-        <input className="gx-name" maxLength={40} value={name} onChange={(e) => setName(e.target.value)} placeholder="Name your Bot" onKeyDown={(e) => { if (e.key === "Enter") submit(); }} />
+        <div className="gx-create-preview"><BotAvatar agent={{ name: name || "Agent", color: agentColorFor(hex), isDefault: false }} look={look} size={96} /></div>
+        <input className="gx-name" maxLength={40} value={name} onChange={(e) => setName(e.target.value)} placeholder="Name (e.g. Researcher)" onKeyDown={(e) => { if (e.key === "Enter") submit(); }} />
         <div className="gx-shapes">{BOT_SHAPES.map((s) => (
           <button type="button" key={s.id} aria-label={s.id} data-active={shape === s.id} onClick={() => setShape(s.id)}>
             <BotAvatar agent={{ name: s.id, color: "mono", isDefault: false }} look={{ shape: s.id, hex: "#7a7a7a" }} size={34} />
