@@ -1,11 +1,12 @@
 # Roadmap
 
 ## Complete audited gaps — current request
-- [ ] Repair persistent memory and verify recall through signed-in chat.
-- [ ] Send actual text/document contents and connect the saved-files library.
-- [ ] Make agent completion, delegation transcripts and job polling reliable.
-- [ ] Connect daily/weekly routine creation, management and signed scheduled execution.
-- [ ] Make Vault account-scoped and enforce last-four-only card labels.
+- [x] Repair persistent memory; imported fact persisted after reload and was recalled through signed-in chat.
+- [x] Send actual text/code/CSV/JSON contents; uploaded CSV read correctly and downloaded contents matched. Binary image/video/PDF analysis remains blocked on a supported analysis service.
+- [x] Reject empty/exhausted completions, retain delegation transcripts and align job-ID polling. Two specialists returned 209.75 and 50; combined answer persisted after reload.
+- [x] Connect daily/weekly routine creation, management and signed execution; a due routine produced a persisted chat answer, duplicate invocation did no work, unsigned invocation returned 401.
+- [ ] Automatic routine scheduling and durable jobs after app closure require a reachable published endpoint and configured scheduler/Inngest credentials; manual signed routine execution is verified.
+- [x] Make Vault account-scoped and enforce last-four-only card labels; validation tests passed. Local Vault is not a password or credential store.
 - [ ] Connect actual computer/code execution; blocked until an isolated execution service is available.
 - [ ] Activate Google Play purchases; blocked on signed Android app, Play products and verification credentials.
 - [ ] Verify external account actions; blocked on account-owner OAuth approval.
@@ -111,7 +112,7 @@
 - [x] Ceyo: black sign-in, redesigned verification-code screen, Megsy text replaced, old unreachable pages removed.
 - [x] Compact pricing, bot edit voice/speed/language, bot profile Computer/Notifications/Share as Template, chat + attachments menu, faster bottom-sheet page opens.
 - [ ] Replace Primary Bot: needs backend support to change the primary bot.
-- [ ] Sending attached files to bots: only file names are sent until upload is connected.
+- [x] Text/code/CSV/JSON attachments now persist with actual contents and the agent reads them with read_file; binary media analysis is not connected.
 - [x] Remove New conversation from chat + menu.
 - [x] Polish edit-bot fields and pricing; stop preloading and delete all remaining old pages and their unused code.
 
