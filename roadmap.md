@@ -133,3 +133,4 @@
 - [x] Floating chat composer (messages scroll beneath it)
 
 - [ ] Fix lag + reply restarting from the beginning (group chat stream)
+- [ ] Home header: transparent, no borders, floating buttons
