@@ -84,7 +84,7 @@ function Composer({
   onUnqueue,
   onNew,
   onConnect,
-  onCall,
+  members = [], onCall,
 }: {
   lang: HubLang;
   placeholder: string;
@@ -99,6 +99,7 @@ function Composer({
   onNew: () => void;
   onConnect: () => void;
   onCall?: () => void;
+  members?: AgentInfo[];
 }) {
   const [text, setText] = useState("");
   const [plusOpen, setPlusOpen] = useState(false);
@@ -155,8 +156,13 @@ function Composer({
     setListening(true);
   };
 
+  const mentionQuery = members.length ? /(?:^|\s)@([^\s@]*)$/.exec(text)?.[1] : undefined;
+  const mentionMatches = mentionQuery === undefined ? [] : members.filter((m) => m.name.toLowerCase().includes(mentionQuery.toLowerCase())).slice(0, 6);
+  const pickMention = (m: AgentInfo) => { setText((t) => t.replace(/@([^\s@]*)$/, `@${m.name} `)); textarea.current?.focus(); };
+
   return (
     <div className="cx-composer-wrap">
+      {mentionMatches.length > 0 && <div className="cx-mentions" role="listbox">{mentionMatches.map((m) => <button type="button" role="option" key={m.id} onPointerDown={(e) => { e.preventDefault(); pickMention(m); }}><BotAvatar agent={m} size={26} /><span>{m.name}</span></button>)}</div>}
       {queue.map((q) => (
         <div className="cx-queued" key={q.id}>
           <Clock size={14} /><span>{q.text}</span>
@@ -194,6 +200,7 @@ function Composer({
           placeholder={placeholder}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => {
+            if (mentionMatches.length && (e.key === "Enter" || e.key === "Tab")) { e.preventDefault(); pickMention(mentionMatches[0]); return; }
             if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); submit(); }
           }}
         />
@@ -569,6 +576,7 @@ export function HubChat({
           onNew={() => onSession(null)}
           onConnect={() => nav("/settings/apps")}
           onCall={group ? undefined : () => setCalling(true)}
+          members={group ? agents.filter((a) => group.memberIds.includes(a.id)) : undefined}
         />
       )}
 
