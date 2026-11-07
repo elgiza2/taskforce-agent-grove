@@ -391,3 +391,9 @@
 .hub-search-overlay .hub-search-filters{background:transparent!important;border:0!important;box-shadow:none!important;gap:8px;padding:calc(env(safe-area-inset-top) + 18px) 18px 10px}
 .hub-search-overlay .hub-search-filters button{border:0!important;background:#262628;color:#fff;font-size:13.5px;font-weight:500;padding:7px 13px}
 .hub-search-overlay .hub-search-filters button[data-active="true"]{background:#fff;color:#000}
+
+/* Never allow sideways scrolling on the home list */
+.agent-hub, .hub-home, .hub-home-scroll { max-width: 100vw; overflow-x: hidden; overscroll-behavior-x: none; }
+.hub-home-scroll { touch-action: pan-y; }
+.hub-flat-rows, .hub-category-rows, .hub-list-row { min-width: 0; max-width: 100%; }
+.hub-list-row-main { width: 100%; }
