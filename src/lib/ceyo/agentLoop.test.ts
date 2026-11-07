@@ -3,6 +3,16 @@ import { runAgentLoop } from "./agentLoop.server";
 function reply(delta: object) { return new Response(`data: ${JSON.stringify({ choices: [{ delta }] })}\n\ndata: [DONE]\n\n`); }
 describe("steerable execution", () => {
   afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
+  it("does not mark step exhaustion as completion", async () => {
+    vi.stubEnv("CEREBRAS_API_KEY", "test-only");
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(reply({ content: "Starting", tool_calls: [{ index: 0, id: "c", function: { name: "test_tool", arguments: "{}" } }] })));
+    await expect(runAgentLoop("Partner", [], () => {}, new AbortController().signal, async () => [], { maxSteps: 1, extras: [{ name: "test_tool", def: {}, run: async () => "done" }] })).rejects.toThrow("step limit");
+  });
+  it("rejects an empty final response even after successful tools", async () => {
+    vi.stubEnv("CEREBRAS_API_KEY", "test-only");
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(reply({})));
+    await expect(runAgentLoop("Partner", [], () => {}, new AbortController().signal)).rejects.toThrow("did not complete");
+  });
   it("does not execute a stale command when the user asks to stop", async () => {
     vi.stubEnv("CEREBRAS_API_KEY", "test-only");
     const run = vi.fn(async () => "created");

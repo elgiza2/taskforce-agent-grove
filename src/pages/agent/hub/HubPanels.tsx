@@ -1,4 +1,5 @@
 import "@/styles/ceyo.css";
+import { ResourceList } from "@/components/agent/ResourceList";
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { fileToAvatar, writeGroupAvatar } from "./chatPrefs";
 import {
@@ -248,9 +249,7 @@ export function ProfilePanel({
   if (view === "routines" || view === "library") return (
     <section className="cx-sub" key={view}>
       <Head title={view === "routines" ? (ar ? "الروتينات" : "Routines") : (ar ? "المكتبة" : "Library")} back={() => setView("main")} />
-      <p className="cx-sub-empty">{view === "routines"
-        ? (ar ? "الروتينات مهام متكررة البوت بينفذها في مواعيد. اطلبها منه في الشات." : "Routines are recurring tasks this Bot runs on a schedule. Ask it in chat to set one up.")
-        : (ar ? "الصفحات والملفات والتطبيقات اللي البوت بيعملها هتظهر هنا" : "Pages, files, and apps this Bot makes show up here")}</p>
+      <ResourceList kind={view === "routines" ? "routines" : "files"} botId={agent.id} />
     </section>
   );
 
@@ -400,7 +399,7 @@ export function SearchOverlay({
         {(filter === "All" || filter === "Messages") && matchingSessions.map((session) => (
           <button type="button" className="hub-search-row" key={session.id} onClick={() => onSession(session)}><span className="hub-search-file-icon"><MessageSquareText size={20} /></span><span><strong>{session.title}</strong><small>{agents.find((agent) => agent.id === session.agentId)?.name || (groups.find((group) => group.coordinatorId === session.agentId)?.name ?? "")}</small></span><em>{ar ? "رسالة" : "Message"}</em></button>
         ))}
-        {(filter === "Files" || filter === "Routines") && <div className="hub-empty-state"><span className="hub-empty-icon">{filter === "Files" ? <FileText size={22} /> : <RotateCcw size={22} />}</span><strong>{ar ? "مفيش حاجة هنا لسه" : "Nothing here yet"}</strong><p>{filter === "Files" ? (ar ? "الملفات اللي البوتات هتشاركها هتظهر هنا." : "Files shared by your bots will appear here.") : ar ? "الروتينات الشغالة هتظهر هنا." : "Active routines will appear here."}</p></div>}
+        {(filter === "Files" || filter === "Routines") && <ResourceList kind={filter === "Files" ? "files" : "routines"} query={query} />}
         {noResults && (filter === "All" || filter === "Messages" || filter === "Bots" || filter === "Group Chats") && <EmptySearch lang={lang} query={query} />}
       </div>
       <div className="hub-search-bottom">
