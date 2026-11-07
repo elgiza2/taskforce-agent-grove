@@ -25,9 +25,10 @@ export function useAgentSession(sessionId: string | null, lang: Lang) {
       const ids = new Set(r.events.map((e) => e.id));
       // A history request can finish before a just-sent message is persisted.
       const retained = previous.filter((e) => e.type === "user.message" && !ids.has(e.id));
-      // Never replace an active stream with an older database snapshot.
-      const live = previous.filter((e) => e.type !== "user.message" && !ids.has(e.id));
-      const next = r.status === "running" && previous.length ? [...previous, ...r.events.filter((e) => !previous.some((p) => p.id === e.id))] : [...r.events, ...retained, ...(r.status === "running" ? live : [])];
+      // While running, never replace the live stream with an older database snapshot.
+      // Once idle, the database snapshot is final: previous live events carry different
+      // ids than their persisted copies, so keeping them would replay the whole reply.
+      const next = r.status === "running" && previous.length ? [...previous, ...r.events.filter((e) => !previous.some((p) => p.id === e.id))] : [...r.events, ...retained];
       seen.current = new Set(next.map((e) => e.id));
       return next;
     });
