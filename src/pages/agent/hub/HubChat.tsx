@@ -540,10 +540,14 @@ export function HubChat({
                 ? (ar ? ["بيكتب", "بيرتب الرد", "بيكمل الكتابة"] : ["Writing", "Shaping the reply", "Still writing"])
                 : (ar ? ["بيفكر في الموضوع", "بيحلل طلبك", "بيرتب أفكاره", "لحظة كمان"] : ["Thinking it through", "Reading your request", "Organizing ideas", "One more moment"]);
               const label = pool[tick % pool.length];
+              const others = group ? Math.max(0, group.memberIds.filter((id) => id !== bot.id).length) : 0;
               return (
                 <div className="cx-working" key="working">
                   <BotAvatar agent={bot} size={30} state={state} />
-                  <span dir="auto" className="cx-working-text">{group && <b>{bot.name}</b>}<span key={label} className="cx-shimmer cx-label-swap">{label}</span></span>
+                  <span dir="auto" className="cx-working-text">
+                    {group && <b>{bot.name}{others > 0 && <span className="cx-working-others"> +{others} {ar ? "آخرون" : "others"}</span>} </b>}
+                    <span key={label} className="cx-shimmer cx-label-swap">{label}</span>
+                  </span>
                 </div>
               );
             })}
