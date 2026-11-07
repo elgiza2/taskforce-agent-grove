@@ -32,7 +32,6 @@ import { useNavigate } from "react-router-dom";
 import { agentApi, type AgentInfo, type SessionInfo } from "@/lib/agentsky/client";
 import { refreshSessions, workspace } from "@/lib/agentsky/store";
 import { useAgentSession } from "@/hooks/useAgentSession";
-import { StepTimeline } from "@/components/agent/StepTimeline";
 import { MediaCard, PlanCard, TaskCard, VideoProposalCard } from "@/components/agent/Cards";
 import { VoiceCallBar } from "./VoiceCall";
 import { ChoiceCard, ConnectAppsCard, SecretCard, readConnectApps } from "./HubCards";
