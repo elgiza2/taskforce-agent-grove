@@ -100,3 +100,8 @@
 - [x] Deep clean: removed Megsy referral pages/assets, invite-code logic, old notes; new clean database tables (profiles, roles, bots, groups, chats, settings)
 - [ ] Remove unused old server functions (payments/media) — blocked by tool restriction
 - [ ] App still reads the old backend address; reconnect the Supabase project in Lovable settings
+
+- [x] Single robot loader with rotating text, hides instantly; no "Used tool" lines or empty reply rows; chat stays pinned while replies grow.
+- [x] Stop endless reply retries when a reply fails.
+- [x] Verified signed-in: team request creates group + role-named members; group delegation with live web research replies.
+- [ ] Computer/code agent, memory, and app-connection sign-ins not yet tested end-to-end.
